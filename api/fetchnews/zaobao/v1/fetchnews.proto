@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "github.com/hi20160616/fetchnews-api/proto/v1/fetchnews.proto";
+
+option go_package = "github.com/hi20160616/ms-kabar/api/fetchnews/kabar/v1";
+
+package fetchnews.kabar.v1;
+
+service Fetch{
+  rpc ListArticles(fetchnews.v1.ListArticlesRequest) returns (fetchnews.v1.ListArticlesResponse){ }
+  rpc GetArticle(fetchnews.v1.GetArticleRequest) returns (fetchnews.v1.Article){ }
+  rpc SearchArticles(fetchnews.v1.SearchArticlesRequest) returns (fetchnews.v1.SearchArticlesResponse){ }
+}

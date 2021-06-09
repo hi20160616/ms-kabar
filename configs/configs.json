@@ -1,0 +1,13 @@
+{
+  "dbpath":"db",
+  "microservice":{
+    "title":"kabar",
+    "domain":"cn.kabar.kg",
+    "url":[
+      "http://cn.kabar.kg/news/"
+    ],
+    "addr":":10009",
+    "timeout":"1s",
+    "heartbeat":"2h"
+  }
+}
