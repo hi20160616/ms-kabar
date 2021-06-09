@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
@@ -147,23 +146,28 @@ func (a *Article) fetchTitle() (string, error) {
 		return "", fmt.Errorf("[%s] getTitle error, there is no element <title>", configs.Data.MS.Title)
 	}
 	title := n[0].FirstChild.Data
-	rp := strings.NewReplacer(" | 联合早报网", "", " | 早报", "")
-	title = strings.TrimSpace(rp.Replace(title))
+	title = strings.TrimSpace(title)
 	gears.ReplaceIllegalChar(&title)
 	return title, nil
 }
 
 func (a *Article) fetchUpdateTime() (*timestamppb.Timestamp, error) {
-	if a.raw == nil {
-		return nil, errors.Errorf("[%s] fetchUpdateTime: raw is nil: %s", configs.Data.MS.Title, a.U.String())
+	if a.doc == nil {
+		return nil, errors.Errorf("[%s] fetchUpdateTime: doc is nil: %s", configs.Data.MS.Title, a.U.String())
 	}
-	re := regexp.MustCompile(`"datePublished": "(.*?)",`)
-	rs := re.FindAllSubmatch(a.raw, -1)[0]
-	t, err := time.Parse(time.RFC3339, string(rs[1]))
-	if err != nil {
-		return nil, err
+	doc := exhtml.ElementsByTagAndClass(a.doc, "span", "article-date")
+	d := []string{}
+	if doc == nil {
+		return nil, errors.Errorf("[%s] fetchUpdateTime: extract nothing: %s", configs.Data.MS.Title, a.U.String())
 	}
-	return timestamppb.New(t), nil
+	//focus on node like "<span class="article-date"><i class="fa fa-clock-o"></i> 10/03/21 22:00 </span>"
+	if doc[0].LastChild.Data != "" {
+		d = append(d, doc[0].LastChild.Data)
+	}
+	//transform date to RFC3339 format
+	t := strings.TrimSpace(d[0])
+	tt, _ := time.Parse("02/01/06 15:04", t)
+	return timestamppb.New(tt), nil
 }
 
 func shanghai(t time.Time) time.Time {
@@ -200,32 +204,21 @@ func (a *Article) fetchContent() (string, error) {
 	}
 	body := ""
 	// Fetch content nodes
-	nodes := exhtml.ElementsByTagAndId(a.doc, "article", "article-body")
+	nodes := exhtml.ElementsByTagAndClass(a.doc, "div", "post-content clearfix")
 	if len(nodes) == 0 {
 		nodes = exhtml.ElementsByTagAndClass(a.doc, "div", "article-content-rawhtml")
 	}
 	if len(nodes) == 0 {
-		nodes = exhtml.ElementsByTagAndClass(a.doc, "div", "article-content-container")
-	}
-	if len(nodes) == 0 {
-		return "", errors.Errorf("[%s] no content extract from %s", configs.Data.MS.Title, a.U.String())
+		return "", errors.New("There is no tag named `<article>` from: " + a.U.String())
 	}
 	plist := exhtml.ElementsByTag(nodes[0], "p")
 	for _, v := range plist {
 		if v.FirstChild == nil {
 			continue
-		} else if v.FirstChild.FirstChild != nil &&
-			v.FirstChild.Data == "strong" {
-			a := exhtml.ElementsByTag(v, "span")
-			for _, aa := range a {
-				body += aa.FirstChild.Data
-			}
-			body += "  \n"
 		} else {
 			body += v.FirstChild.Data + "  \n"
 		}
 	}
-	body = strings.ReplaceAll(body, "span  \n", "")
 
 	return body, nil
 }

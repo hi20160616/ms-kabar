@@ -16,8 +16,8 @@ func TestFetchArticle(t *testing.T) {
 		url string
 		err error
 	}{
-		{"https://www.kabar.com/realtime/world/story20210602-1151196", ErrTimeOverDays},
-		{"https://www.kabar.com/realtime/world/story20210607-1153241", nil},
+		{"http://cn.kabar.kg/news/cn2021-06-04-04/", ErrTimeOverDays},
+		{"http://cn.kabar.kg/news/cn2021-06-08-07/", nil},
 	}
 	for _, tc := range tests {
 		a := NewArticle()

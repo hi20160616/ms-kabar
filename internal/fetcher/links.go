@@ -22,11 +22,7 @@ func fetchLinks() ([]string, error) {
 		}
 		rt = append(rt, links...)
 	}
-	newsWorld := linksFilter(rt, `.*?/news/world/.*`)
-	newsChina := linksFilter(rt, `.*?/news/china/.*`)
-	realtimeWorld := linksFilter(rt, `.*?/realtime/world/.*`)
-	realtimeChina := linksFilter(rt, `.*?/realtime/china/.*`)
-	rt = append(append(append(newsWorld, newsChina...), realtimeWorld...), realtimeChina...)
+	rt = linksFilter(rt, `.*?\/news/.*?\/`)
 	return rt, nil
 }
 
