@@ -29,15 +29,6 @@ type Article struct {
 	doc           *html.Node
 }
 
-var timeout = func() time.Duration {
-	t, err := time.ParseDuration(configs.Data.MS.Timeout)
-	if err != nil {
-		log.Printf("[%s] timeout init error: %v", configs.Data.MS.Title, err)
-		return time.Duration(1 * time.Minute)
-	}
-	return t
-}()
-
 func NewArticle() *Article {
 	return &Article{
 		WebsiteDomain: configs.Data.MS.Domain,
@@ -95,6 +86,23 @@ func (a *Article) Search(keyword ...string) ([]*Article, error) {
 	}
 	return as2, nil
 }
+
+type ByUpdateTime []*Article
+
+func (u ByUpdateTime) Len() int      { return len(u) }
+func (u ByUpdateTime) Swap(i, j int) { u[i], u[j] = u[j], u[i] }
+func (u ByUpdateTime) Less(i, j int) bool {
+	return u[i].UpdateTime.AsTime().Before(u[j].UpdateTime.AsTime())
+}
+
+var timeout = func() time.Duration {
+	t, err := time.ParseDuration(configs.Data.MS.Timeout)
+	if err != nil {
+		log.Printf("[%s] timeout init error: %v", configs.Data.MS.Title, err)
+		return time.Duration(1 * time.Minute)
+	}
+	return t
+}()
 
 // fetchArticle fetch article by rawurl
 func (a *Article) fetchArticle(rawurl string) (*Article, error) {
@@ -226,7 +234,7 @@ func (a *Article) fetchContent() (string, error) {
 func (a *Article) fmtContent(body string) (string, error) {
 	var err error
 	title := "# " + a.Title + "\n\n"
-	lastupdate := shanghai(a.UpdateTime.AsTime()).Format("LastUpdate: [02.01] [1504H]")
+	lastupdate := a.UpdateTime.AsTime().Format(time.RFC3339)
 	webTitle := fmt.Sprintf(" @ [%s](/list/?v=%[1]s): [%[2]s](http://%[2]s)", a.WebsiteTitle, a.WebsiteDomain)
 	u, err := url.QueryUnescape(a.U.String())
 	if err != nil {
@@ -234,7 +242,7 @@ func (a *Article) fmtContent(body string) (string, error) {
 	}
 
 	body = title +
-		lastupdate +
+		"LastUpdate: " + lastupdate +
 		webTitle + "\n\n" +
 		"---\n" +
 		body + "\n\n" +

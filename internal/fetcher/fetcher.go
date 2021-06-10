@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"log"
+	"os"
+	"sort"
+	"time"
 
 	"github.com/hi20160616/ms-kabar/configs"
 )
@@ -12,10 +15,24 @@ import (
 func Fetch() error {
 	defer log.Printf("[%s] Fetch Done.", configs.Data.MS.Title)
 	log.Printf("[%s] Fetching ...", configs.Data.MS.Title)
+
 	as, err := fetch(context.Background())
 	if err != nil {
 		return err
 	}
+
+	as, err = merge(as)
+	if err != nil {
+		return err
+	}
+
+	as, err = filter(as)
+	if err != nil {
+		return err
+	}
+
+	sort.Sort(sort.Reverse(ByUpdateTime(as)))
+
 	return storage(as)
 }
 
@@ -53,4 +70,38 @@ func fetch(ctx context.Context) (as []*Article, err error) {
 		}
 	}
 	return
+}
+
+// merge will merge local data and fetched data from db/articles.json and website respectively
+func merge(as []*Article) ([]*Article, error) {
+	dbAs, err := load()
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return as, nil
+		}
+		return nil, err
+	}
+	as = append(as, dbAs...)
+	return as, nil
+}
+
+func filter(as []*Article) ([]*Article, error) {
+	rt := []*Article{}
+	for _, a := range as {
+		if a.UpdateTime.AsTime().
+			Before(time.Now().AddDate(0, 0, -3)) {
+			// before 3 days, so ignore
+			continue
+		}
+		exist := false
+		for _, _a := range rt {
+			if a.Id == _a.Id {
+				exist = true
+			}
+		}
+		if !exist {
+			rt = append(rt, a)
+		}
+	}
+	return rt, nil
 }
