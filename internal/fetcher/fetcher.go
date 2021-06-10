@@ -85,6 +85,8 @@ func merge(as []*Article) ([]*Article, error) {
 	return as, nil
 }
 
+var ErrTimeOverDays error = errors.New("article update time out of range")
+
 func filter(as []*Article) ([]*Article, error) {
 	rt := []*Article{}
 	for _, a := range as {
