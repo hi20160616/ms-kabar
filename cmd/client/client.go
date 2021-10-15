@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-var address = "localhost" + configs.Data.MS.Addr
+var address = "localhost" + configs.Data.MS["kabar"].Addr
 
 func main() {
 	// Set up a connection to the server.

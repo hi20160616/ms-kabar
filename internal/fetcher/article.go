@@ -31,9 +31,9 @@ type Article struct {
 
 func NewArticle() *Article {
 	return &Article{
-		WebsiteDomain: configs.Data.MS.Domain,
-		WebsiteTitle:  configs.Data.MS.Title,
-		WebsiteId:     fmt.Sprintf("%x", md5.Sum([]byte(configs.Data.MS.Domain))),
+		WebsiteDomain: configs.Data.MS["kabar"].Domain,
+		WebsiteTitle:  configs.Data.MS["kabar"].Title,
+		WebsiteId:     fmt.Sprintf("%x", md5.Sum([]byte(configs.Data.MS["kabar"].Domain))),
 	}
 }
 
@@ -54,8 +54,8 @@ func (a *Article) Get(id string) (*Article, error) {
 			return a, nil
 		}
 	}
-	return nil, fmt.Errorf("[%s] no article with id: %s, url: %s",
-		configs.Data.MS.Title, id, a.U.String())
+	return nil, fmt.Errorf("[%s] no article with id: %s",
+		configs.Data.MS["kabar"].Title, id)
 }
 
 func (a *Article) Search(keyword ...string) ([]*Article, error) {
@@ -96,9 +96,9 @@ func (u ByUpdateTime) Less(i, j int) bool {
 }
 
 var timeout = func() time.Duration {
-	t, err := time.ParseDuration(configs.Data.MS.Timeout)
+	t, err := time.ParseDuration(configs.Data.MS["kabar"].Timeout)
 	if err != nil {
-		log.Printf("[%s] timeout init error: %v", configs.Data.MS.Title, err)
+		log.Printf("[%s] timeout init error: %v", configs.Data.MS["kabar"].Title, err)
 		return time.Duration(1 * time.Minute)
 	}
 	return t
@@ -145,8 +145,9 @@ func (a *Article) fetchArticle(rawurl string) (*Article, error) {
 
 func (a *Article) fetchTitle() (string, error) {
 	n := exhtml.ElementsByTag(a.doc, "title")
-	if n == nil {
-		return "", fmt.Errorf("[%s] getTitle error, there is no element <title>", configs.Data.MS.Title)
+	if n == nil || len(n) == 0 {
+		return "", fmt.Errorf("[%s] there is no element <title>: %s",
+			configs.Data.MS["kabar"].Title, a.U.String())
 	}
 	title := n[0].FirstChild.Data
 	title = strings.TrimSpace(title)
@@ -156,12 +157,12 @@ func (a *Article) fetchTitle() (string, error) {
 
 func (a *Article) fetchUpdateTime() (*timestamppb.Timestamp, error) {
 	if a.doc == nil {
-		return nil, errors.Errorf("[%s] fetchUpdateTime: doc is nil: %s", configs.Data.MS.Title, a.U.String())
+		return nil, errors.Errorf("[%s] fetchUpdateTime: doc is nil: %s", configs.Data.MS["kabar"].Title, a.U.String())
 	}
 	doc := exhtml.ElementsByTagAndClass(a.doc, "span", "article-date")
 	d := []string{}
 	if doc == nil {
-		return nil, errors.Errorf("[%s] fetchUpdateTime: extract nothing: %s", configs.Data.MS.Title, a.U.String())
+		return nil, errors.Errorf("[%s] fetchUpdateTime: extract nothing: %s", configs.Data.MS["kabar"].Title, a.U.String())
 	}
 	//focus on node like "<span class="article-date"><i class="fa fa-clock-o"></i> 10/03/21 22:00 </span>"
 	if doc[0].LastChild.Data != "" {
@@ -180,7 +181,7 @@ func shanghai(t time.Time) time.Time {
 
 func (a *Article) fetchContent() (string, error) {
 	if a.doc == nil {
-		return "", errors.Errorf("[%s] fetchContent: doc is nil: %s", configs.Data.MS.Title, a.U.String())
+		return "", errors.Errorf("[%s] fetchContent: doc is nil: %s", configs.Data.MS["kabar"].Title, a.U.String())
 	}
 	body := ""
 	// Fetch content nodes

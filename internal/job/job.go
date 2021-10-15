@@ -19,7 +19,7 @@ func Crawl(ctx context.Context) error {
 		}
 	}
 	f() // fetch init while start up
-	t, err := time.ParseDuration(configs.Data.MS.Heartbeat)
+	t, err := time.ParseDuration(configs.Data.MS["kabar"].Heartbeat)
 	if err != nil {
 		return err
 	}

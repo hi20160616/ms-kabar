@@ -1,13 +1,6 @@
 {
-  "dbpath":"db",
-  "microservice":{
-    "title":"kabar",
-    "domain":"cn.kabar.kg",
-    "url":[
-      "http://cn.kabar.kg/news/"
-    ],
-    "addr":":10009",
-    "timeout":"1s",
-    "heartbeat":"30m"
-  }
+  "debug":false,
+  "verbose":false,
+  "gist": "https://gist.github.com/hi20160616/bfcb9f8521d17aa4f65cf14b79550e23/raw/configs1.json",
+  "dbpath":"db"
 }

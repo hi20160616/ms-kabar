@@ -14,7 +14,7 @@ import (
 var s = grpc.NewServer()
 
 func Start(ctx context.Context) error {
-	lis, err := net.Listen("tcp", configs.Data.MS.Addr)
+	lis, err := net.Listen("tcp", configs.Data.MS["kabar"].Addr)
 	if err != nil {
 		return err
 	}

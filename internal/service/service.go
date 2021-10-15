@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"strings"
 
 	pb "github.com/hi20160616/fetchnews-api/proto/v1"
@@ -13,6 +14,11 @@ type Server struct {
 }
 
 func (s *Server) ListArticles(ctx context.Context, in *pb.ListArticlesRequest) (*pb.ListArticlesResponse, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered in ListArticles:\n%v\n", r)
+		}
+	}()
 	// log.Printf("Received: %v", in.GetPageSize())
 	a := fetcher.NewArticle()
 	as, err := a.List()
@@ -35,6 +41,11 @@ func (s *Server) ListArticles(ctx context.Context, in *pb.ListArticlesRequest) (
 }
 
 func (s *Server) GetArticle(ctx context.Context, in *pb.GetArticleRequest) (*pb.Article, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered in GetArticle: %s\n%v\n", in.Id, r)
+		}
+	}()
 	// log.Printf("Id: %v", in.Id)
 	// Got article via json reading
 	a := fetcher.NewArticle()
@@ -54,6 +65,11 @@ func (s *Server) GetArticle(ctx context.Context, in *pb.GetArticleRequest) (*pb.
 }
 
 func (s *Server) SearchArticles(ctx context.Context, in *pb.SearchArticlesRequest) (*pb.SearchArticlesResponse, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered in SearchArticles:\n%v\n", r)
+		}
+	}()
 	a := fetcher.NewArticle()
 	as, err := a.Search(strings.Split(in.Keyword, ",")...)
 	if err != nil {
